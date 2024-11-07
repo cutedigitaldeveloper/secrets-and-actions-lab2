@@ -5,17 +5,11 @@ FROM base AS deps
 RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
-RUN corepack enable
-RUN yarn set version berry
-RUN yarn set version 4.5.1
 
 COPY package.json ./
-COPY .yarnrc.yml ./
 
-# RUN npm update && npm install
-
-# If you want yarn update and  install uncomment the bellow
-RUN yarn install
+# DAMN bug
+RUN npm install --force --libc=glibc
 
 FROM base AS builder
 
@@ -24,11 +18,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN corepack enable
-RUN yarn set version berry
-RUN yarn set version 4.5.1
-
-RUN yarn build
+RUN npm run build
 
 FROM base AS runner
 WORKDIR /app
@@ -47,8 +37,8 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 USER nextjs
 
-EXPOSE 3000
+EXPOSE 4050
 
-ENV PORT=3000
+ENV PORT=4050
 
 CMD ["node", "server.js"]
